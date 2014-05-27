@@ -1,9 +1,12 @@
 from scrapy.spider import Spider
-from scrapy.selector import Selector
+from scrapy.selector import Selector, HtmlXPathSelector
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.http import Request
 
 from camping.items import CampSite
 
-class AusCampSpider(Spider):
+class AusCampSpider(CrawlSpider):
     name = 'aus_camp'
     allowed_domains = ['australiancampsites.com.au']
     start_urls = [
@@ -13,15 +16,30 @@ class AusCampSpider(Spider):
         "http://australiancampsites.com.au/index.php?option=com_content&view=section&layout=blog&id=15&Itemid=81&limitstart=50",
     ]
 
-    def parse(self, response):
-        sel = Selector(response)
-        sites = sel.xpath('//*/a[@class="blogsection"]')
-        items = []
+    rules = (Rule (SgmlLinkExtractor(restrict_xpaths=('//*/a[@class="blogsection"]', )), callback="parse_items", follow=True),)
 
-        for site in sites:
-            item = CampSite()
-            item['name'] = site.xpath('text()').extract()[0]
-            item['url'] = site.xpath('@href').extract()[0]
-            items.append(item)
+    def parse_items(self, response):
+        sel = Selector(response)
+
+        name = sel.xpath('//*/span[@style="font-size: xx-large;"]/text()').extract()[0]
+        # details = sel.xpath('//*/span/text()')[19].extract()
+        spans = sel.xpath('//*/span')
+
+        details = None
+        for index, item in enumerate(spans):
+            try:
+                if item.xpath('text()').extract()[0].find("GPS") > -1:
+                    details = item.xpath('text()').extract()[0]
+            except IndexError:
+                pass
+                
+
+        # if i:
+        #     details = spans[i+2].xpath('text()').extract()[0]
+
+        item = CampSite()
+        item['name'] = name
+        item['url'] = response.url
+        item['details'] = details
         
-        return items
+        return item
