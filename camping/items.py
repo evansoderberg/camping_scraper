@@ -9,4 +9,6 @@ class CampSite(Item):
     # define the fields for your item here like:
     name = Field()
     url = Field()
-    details = Field()
+    # details = Field()
+    lat = Field()
+    lon = Field()

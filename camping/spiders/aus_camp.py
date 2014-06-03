@@ -22,24 +22,27 @@ class AusCampSpider(CrawlSpider):
         sel = Selector(response)
 
         name = sel.xpath('//*/span[@style="font-size: xx-large;"]/text()').extract()[0]
-        # details = sel.xpath('//*/span/text()')[19].extract()
         spans = sel.xpath('//*/span')
 
         details = None
+        lat = None
+        lon = None
         for index, item in enumerate(spans):
             try:
                 if item.xpath('text()').extract()[0].find("GPS") > -1:
                     details = item.xpath('text()').extract()[0]
+                    g = details.find('GPS')
+                    c = details.find(':', g)
+                    coords = details[c+2:-1]
+                    lat = float(coords.split(',')[0])
+                    lon = float(coords.split(',')[1])
             except IndexError:
                 pass
-                
-
-        # if i:
-        #     details = spans[i+2].xpath('text()').extract()[0]
 
         item = CampSite()
         item['name'] = name
         item['url'] = response.url
-        item['details'] = details
+        item['lat'] = lat
+        item['lon'] = lon
         
         return item
