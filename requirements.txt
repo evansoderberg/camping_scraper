@@ -1,0 +1,2 @@
+pyOpenSSL==0.13.1
+Scrapy
