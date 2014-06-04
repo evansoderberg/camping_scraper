@@ -12,3 +12,4 @@ class CampSite(Item):
     # details = Field()
     lat = Field()
     lon = Field()
+    description = Field()
